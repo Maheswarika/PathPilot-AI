@@ -1,0 +1,31 @@
+# Root
+.env
+.env.*
+!.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env
+frontend/.env.local
+
+# Backend
+backend/target/
+backend/.idea/
+backend/.vscode/
+backend/*.iml
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.mvn/wrapper/*.jar
+
+# Java
+*.class
+*.log
+hs_err_pid*
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
