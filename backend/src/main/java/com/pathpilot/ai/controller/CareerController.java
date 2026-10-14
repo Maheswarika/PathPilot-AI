@@ -31,16 +31,19 @@ public class CareerController {
         this.userService = userService;
     }
 
+    // Get all careers
     @GetMapping
     public List<CareerDto> getCareers() {
         return careerService.getAllCareers();
     }
 
+    // Get one career by ID
     @GetMapping("/{id}")
     public CareerDto getCareer(@PathVariable Long id) {
         return careerService.getCareerDto(id);
     }
 
+    // Get skills required for a career
     @GetMapping("/{id}/skills")
     public List<CareerSkillDto> getCareerSkills(
             @PathVariable Long id) {
@@ -48,6 +51,7 @@ public class CareerController {
         return careerService.getCareerSkills(id);
     }
 
+    // Get the current user's skill gap for a career
     @GetMapping("/{id}/skill-gap")
     public SkillGapDto getSkillGap(
             @PathVariable Long id,

@@ -1,4 +1,3 @@
-
 package com.pathpilot.ai.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;

@@ -1,3 +1,4 @@
+
 package com.pathpilot.ai.controller;
 
 import com.pathpilot.ai.dto.AuthResponse;
@@ -29,7 +30,9 @@ public class AuthController {
 
         AuthResponse response = userService.register(request);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @PostMapping("/login")
@@ -42,7 +45,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserSummaryDto> me(
+    public ResponseEntity<UserSummaryDto> getCurrentUser(
             Authentication authentication) {
 
         UserSummaryDto user =

@@ -3,12 +3,16 @@
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /workspace/app
 
-# Copy maven wrapper / pom.xml and dependencies
-COPY pom.xml .
-COPY src ./src
+# Install Maven (no wrapper dependency)
+RUN apt-get update && apt-get install -y --no-install-recommends maven && rm -rf /var/lib/apt/lists/*
 
-# Build production jar
-RUN ./mvnw clean package -DskipTests 2>/dev/null || (apt-get update && apt-get install -y maven && mvn clean package -DskipTests)
+# Copy pom.xml first for layer caching of dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline -B -q
+
+# Copy source and build
+COPY src ./src
+RUN mvn clean package -DskipTests -B -q
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-jammy
@@ -24,7 +28,7 @@ COPY --from=builder /workspace/app/target/*.jar app.jar
 RUN chown -R spring:spring /app
 USER spring:spring
 
-# Expose default port (Render will override via PORT environment variable)
+# Expose default port (Railway / Render override via PORT environment variable)
 EXPOSE 8081
 
 # Launch application with production container flags

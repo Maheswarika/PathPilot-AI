@@ -1,3 +1,4 @@
+
 package com.pathpilot.ai.service;
 
 import com.pathpilot.ai.dto.AuthResponse;
@@ -21,9 +22,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Set;
-import java.sql.SQLException;
 
 @Service
 public class UserService {
@@ -48,6 +49,7 @@ public class UserService {
         this.authenticationManager = authenticationManager;
     }
 
+    // Register a new user
     @Transactional
     public AuthResponse register(RegisterRequest request) {
 
@@ -73,16 +75,17 @@ public class UserService {
                 passwordEncoder.encode(request.password())
         );
 
+        // Public registration only assigns the student role.
         Role studentRole = roleRepository
                 .findByName(Role.RoleName.ROLE_STUDENT)
                 .orElseGet(() -> roleRepository.save(
                         new Role(Role.RoleName.ROLE_STUDENT)
                 ));
 
-        // Public registration must only assign the STUDENT role.
         user.setRoles(Set.of(studentRole));
 
         User savedUser;
+
         try {
             savedUser = userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException ex) {
@@ -92,12 +95,14 @@ public class UserService {
                         HttpStatus.CONFLICT
                 );
             }
+
             throw ex;
         }
 
         return buildAuthResponse(savedUser);
     }
 
+    // Authenticate an existing user
     public AuthResponse login(LoginRequest request) {
 
         String email = normalizeEmail(request.email());
@@ -125,19 +130,24 @@ public class UserService {
         return buildAuthResponse(user);
     }
 
+    // Return the currently authenticated user's details
     @Transactional(readOnly = true)
     public UserSummaryDto getCurrentUserDto(
             Authentication authentication) {
 
-        return mapToSummary(getCurrentUser(authentication));
+        User user = getCurrentUser(authentication);
+        return mapToSummary(user);
     }
 
+    // Find the currently authenticated user
     @Transactional(readOnly = true)
     public User getCurrentUser(Authentication authentication) {
 
         if (authentication == null
                 || !authentication.isAuthenticated()
-                || authentication.getName() == null) {
+                || authentication.getName() == null
+                || authentication.getName().isBlank()
+                || "anonymousUser".equals(authentication.getName())) {
 
             throw new ApiException(
                     "Authentication is required.",
@@ -148,6 +158,7 @@ public class UserService {
         return findByEmail(authentication.getName());
     }
 
+    // Find a user by email
     @Transactional(readOnly = true)
     public User findByEmail(String email) {
 
@@ -158,6 +169,7 @@ public class UserService {
                 ));
     }
 
+    // Convert user entity to a safe response DTO
     public UserSummaryDto mapToSummary(User user) {
 
         return new UserSummaryDto(
@@ -175,6 +187,7 @@ public class UserService {
         );
     }
 
+    // Generate a JWT and create the authentication response
     private AuthResponse buildAuthResponse(User user) {
 
         String token = jwtService.generateToken(user.getEmail());
@@ -185,18 +198,27 @@ public class UserService {
         );
     }
 
+    // Normalize email addresses consistently
     private String normalizeEmail(String email) {
+
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
+    // Check whether the database rejected a duplicate unique value
     private boolean isUniqueConstraintViolation(Throwable error) {
-        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+
+        for (Throwable cause = error;
+             cause != null;
+             cause = cause.getCause()) {
+
             if (cause instanceof SQLException sqlException
                     && (sqlException.getErrorCode() == 1062
                     || "23505".equals(sqlException.getSQLState()))) {
+
                 return true;
             }
         }
+
         return false;
     }
 }

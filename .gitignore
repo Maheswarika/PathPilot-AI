@@ -1,4 +1,4 @@
-# Root
+# Environment variables
 .env
 .env.*
 !.env.example
@@ -19,7 +19,8 @@ backend/.classpath
 backend/.project
 backend/.settings/
 backend/.mvn/wrapper/*.jar
-
+backend/target/
+target/
 # Java
 *.class
 *.log
@@ -29,3 +30,6 @@ hs_err_pid*
 .vscode/
 .idea/
 .DS_Store
+
+# Build folders
+target/
