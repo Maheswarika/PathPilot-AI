@@ -12,9 +12,10 @@ export function getErrorMessage(error) {
     if (isHtmlResponse || isEmptyResponse) return 'Cannot reach the backend. Verify Spring Boot is running and the frontend API proxy is configured correctly.'
     return `The backend returned an internal error (HTTP ${error.response.status}). Please check the backend logs and try again.`
   }
-  if (error?.response) return `The request was rejected (HTTP ${error.response.status}). Check the details and try again.`
+  if (error?.message && !error?.response && error.message !== 'Network Error') return error.message
   if (error?.code === 'ECONNABORTED') return 'The backend request timed out. Check the server and try again.'
   if (!error?.response) return 'Cannot reach the backend. Verify Spring Boot is running and the frontend API URL is configured correctly.'
+  if (error?.response) return `The request was rejected (HTTP ${error.response.status}). Check the details and try again.`
   return 'Something went wrong. Please try again.'
 }
 

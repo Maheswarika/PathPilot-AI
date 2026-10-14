@@ -57,6 +57,9 @@ public class SecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
 
+                // Explicitly permit all preflight OPTIONS requests for CORS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
                 // Public authentication endpoints
                 .requestMatchers(
                     HttpMethod.POST,
@@ -148,6 +151,7 @@ public class SecurityConfig {
         if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
             List<String> patterns = allowedOrigins.stream()
                 .map(String::trim)
+                .map(origin -> origin.endsWith("/") ? origin.substring(0, origin.length() - 1) : origin)
                 .filter(origin -> !origin.isBlank())
                 .toList();
             config.setAllowedOriginPatterns(patterns);

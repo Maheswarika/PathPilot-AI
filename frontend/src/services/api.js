@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { TOKEN_KEY } from '../utils/authStorage.js'
 
-const rawBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || ''
+const rawBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '').trim()
 const cleanBase = rawBase
-  ? rawBase.trim().replace(/\/api\/?$/, '').replace(/\/$/, '')
-  : (import.meta.env.DEV ? '' : '')
+  ? rawBase.replace(/\/api\/?$/, '').replace(/\/+$/, '')
+  : ''
 
 const api = axios.create({
   baseURL: cleanBase,
@@ -12,14 +12,19 @@ const api = axios.create({
   timeout: 60000,
 })
 
-if (!rawBase && typeof window !== 'undefined' && import.meta.env.PROD) {
+if (!cleanBase && typeof window !== 'undefined' && import.meta.env.PROD) {
   console.warn(
-    '[PathPilot AI] Warning: Neither VITE_API_BASE_URL nor VITE_API_URL is configured. ' +
-    'API calls are falling back to relative paths, which will fail if no proxy is configured on the host.'
+    '[PathPilot AI] Warning: Neither VITE_API_BASE_URL nor VITE_API_URL is configured in your build environment. ' +
+    'API requests to /api/* will fail on static hosts like Vercel unless configured.'
   )
 }
 
 api.interceptors.request.use((config) => {
+  if (import.meta.env.PROD && !cleanBase) {
+    return Promise.reject(new Error(
+      'Backend API URL is not configured. Set VITE_API_BASE_URL in your Vercel Project Settings (e.g. https://<your-railway-app>.up.railway.app) and trigger a new deployment.'
+    ))
+  }
   const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
